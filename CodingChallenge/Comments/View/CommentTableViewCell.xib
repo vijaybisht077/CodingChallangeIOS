@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="22505" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22504"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="132" id="KGk-i7-Jjw" customClass="CommentTableViewCell" customModule="CodingChallenge" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="470" height="132"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="470" height="132"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="751" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HSv-bd-RZt">
+                        <rect key="frame" x="8" y="7.9999999999999982" width="454" height="20.333333333333329"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="751" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cnA-Rn-G2X">
+                        <rect key="frame" x="8" y="75.333333333333329" width="454" height="20.333333333333329"/>
+                        <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" verticalCompressionResistancePriority="751" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tPa-5Y-r5d">
+                        <rect key="frame" x="8" y="103.66666666666667" width="454" height="20.333333333333329"/>
+                        <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
+                        <nil key="textColor"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="cnA-Rn-G2X" firstAttribute="top" relation="greaterThanOrEqual" secondItem="HSv-bd-RZt" secondAttribute="bottom" constant="8" id="CU1-9d-kYC"/>
+                    <constraint firstAttribute="bottom" secondItem="tPa-5Y-r5d" secondAttribute="bottom" constant="8" id="L4D-DT-fOs"/>
+                    <constraint firstAttribute="trailing" secondItem="tPa-5Y-r5d" secondAttribute="trailing" constant="8" id="SPC-K9-RvQ"/>
+                    <constraint firstItem="cnA-Rn-G2X" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="8" id="Vcz-sb-O8W"/>
+                    <constraint firstItem="HSv-bd-RZt" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="8" id="YEa-0M-5PJ"/>
+                    <constraint firstItem="tPa-5Y-r5d" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="8" id="YiJ-4G-nye"/>
+                    <constraint firstItem="HSv-bd-RZt" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="8" id="d6e-xe-RdU"/>
+                    <constraint firstAttribute="trailing" secondItem="HSv-bd-RZt" secondAttribute="trailing" constant="8" id="gTF-oe-tgl"/>
+                    <constraint firstItem="tPa-5Y-r5d" firstAttribute="top" secondItem="cnA-Rn-G2X" secondAttribute="bottom" constant="8" id="peA-rD-aR5"/>
+                    <constraint firstAttribute="trailing" secondItem="cnA-Rn-G2X" secondAttribute="trailing" constant="8" id="tGe-U4-lvc"/>
+                </constraints>
+            </tableViewCellContentView>
+            <viewLayoutGuide key="safeArea" id="njF-e1-oar"/>
+            <connections>
+                <outlet property="bodyLabel" destination="HSv-bd-RZt" id="adb-Bl-7QY"/>
+                <outlet property="emailLabel" destination="tPa-5Y-r5d" id="OlH-fT-5mk"/>
+                <outlet property="nameLabel" destination="cnA-Rn-G2X" id="ynV-QF-pt3"/>
+            </connections>
+            <point key="canvasLocation" x="244.27480916030532" y="59.859154929577471"/>
+        </tableViewCell>
+    </objects>
+</document>
