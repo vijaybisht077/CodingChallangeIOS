@@ -31,15 +31,13 @@ class CommentsViewModelTests: XCTestCase {
     }
 
     func testFetchCommentsSuccess() async {
-        // Prepare mock data
+        // Given
         let mockComments = [Comment(id: 1,
                                     postId: 1,
                                     name: "Test Comment",
                                     email: "test@example.com",
                                     body: "Test Body")]
         mockApiManager.commentsToReturn = mockComments
-
-        // Observe changes to comments
         let expectation = XCTestExpectation(description: "Fetch comments successfully")
         viewModel.commentsPublisher
             .sink { comments in
@@ -49,10 +47,12 @@ class CommentsViewModelTests: XCTestCase {
             }
             .store(in: &cancellables)
 
-        await viewModel.fetchComments(for: 1)
-
-        wait(for: [expectation], timeout: 1.0)
+        // When
+        viewModel.fetchComments(for: 1)
+        await fulfillment(of: [expectation])
+        // Then
         XCTAssertEqual(viewModel.comments.first?.postId, mockComments.first?.postId)
         XCTAssertNil(viewModel.errorMessage)
     }
 }
+

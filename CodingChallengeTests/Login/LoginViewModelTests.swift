@@ -34,51 +34,72 @@ class LoginViewModelTests: XCTestCase {
     }
     
     func testValidEmail() {
+        // Given
         let validEmails = ["test@example.com", "user.name@domain.co", "user+name@domain.com"]
         for email in validEmails {
+            // When
             viewModel.email = email
+            // Then
             XCTAssertTrue(viewModel.isValidEmail(email))
         }
     }
     
     func testInvalidEmail() {
+        // Given
         let invalidEmails = ["plainaddress", "@missingusername.com", "username@.com"]
         for email in invalidEmails {
+            // When
             viewModel.email = email
+            // Then
             XCTAssertFalse(viewModel.isValidEmail(email))
         }
     }
     
     func testValidPassword() {
+        // Given
         let validPasswords = ["Password1", "12345678", "abcdefgh"]
         for password in validPasswords {
+            // When
             viewModel.password = password
+            // Then
             XCTAssertTrue(viewModel.isValidPassword(password))
         }
     }
     
     func testInvalidPassword() {
+        // Given
         let invalidPasswords = ["short", "toolongpassword123", " "]
         for password in invalidPasswords {
+            // When
             viewModel.password = password
+            // Then
             XCTAssertFalse(viewModel.isValidPassword(password))
         }
     }
     
     func testFormValidation() {
+        // When
         viewModel.email = "test@example.com"
         viewModel.password = "password"
+        // Then
         XCTAssertTrue(viewModel.isSubmitButtonEnabled)
         
+        // When
         viewModel.email = "invalidemail"
+        // Then
         XCTAssertFalse(viewModel.isSubmitButtonEnabled)
         
+        // When
         viewModel.email = "test@example.com"
         viewModel.password = "short"
+        // Then
         XCTAssertFalse(viewModel.isSubmitButtonEnabled)
         
+        // When
         viewModel.email = "test@example.com"
         viewModel.password = "validpassword"
+        // Then
         XCTAssertTrue(viewModel.isSubmitButtonEnabled)
     }
 }
+
