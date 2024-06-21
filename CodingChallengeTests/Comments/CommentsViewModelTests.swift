@@ -5,32 +5,32 @@
 //  Created by vijaybisht on 10/06/24.
 //
 
-import Foundation
 import XCTest
-import Combine
+import RxSwift
+import RxCocoa
 @testable import CodingChallenge
 
 class CommentsViewModelTests: XCTestCase {
 
     var viewModel: CommentsViewModel!
     var mockApiManager: MockCommentsApiManager!
-    var cancellables: Set<AnyCancellable>!
+    var disposeBag: DisposeBag!
 
     override func setUp() {
         super.setUp()
         mockApiManager = MockCommentsApiManager()
         viewModel = CommentsViewModel(manager: mockApiManager)
-        cancellables = Set<AnyCancellable>()
+        disposeBag = DisposeBag()
     }
 
     override func tearDown() {
         viewModel = nil
         mockApiManager = nil
-        cancellables = nil
+        disposeBag = nil
         super.tearDown()
     }
 
-    func testFetchCommentsSuccess() async {
+    func testFetchCommentsSuccess() {
         // Given
         let mockComments = [Comment(id: 1,
                                     postId: 1,
@@ -39,20 +39,24 @@ class CommentsViewModelTests: XCTestCase {
                                     body: "Test Body")]
         mockApiManager.commentsToReturn = mockComments
         let expectation = XCTestExpectation(description: "Fetch comments successfully")
+        
         viewModel.commentsPublisher
-            .sink { comments in
+            .subscribe(onNext: { comments in
                 if comments.count == mockComments.count {
                     expectation.fulfill()
                 }
-            }
-            .store(in: &cancellables)
-
+            })
+            .disposed(by: disposeBag)
+        
         // When
         viewModel.fetchComments(for: 1)
-        await fulfillment(of: [expectation])
+        
+        // Wait for expectations
+        wait(for: [expectation], timeout: 1.0)
+        
         // Then
         XCTAssertEqual(viewModel.comments.first?.postId, mockComments.first?.postId)
         XCTAssertNil(viewModel.errorMessage)
     }
-}
 
+}

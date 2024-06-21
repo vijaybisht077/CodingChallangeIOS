@@ -7,26 +7,49 @@
 
 import Foundation
 import UIKit
+import RxSwift
 
 enum DataError: Error {
     case invalidURL
     case invalidResponse
 }
 
-public protocol ApiManagerProtocol {
-    func request<T: Decodable>(urlString: String) async throws -> T
+protocol ApiManagerProtocol {
+    func request<T: Decodable>(urlString: String) -> Single<T>
 }
 
-public struct ApiManager: ApiManagerProtocol {
-    
-    public func request<T: Decodable>(urlString: String) async throws -> T {
-        guard let url = URL(string: urlString) else {
-            throw DataError.invalidURL
+class ApiManager: ApiManagerProtocol {
+    func request<T: Decodable>(urlString: String) -> Single<T> {
+        return Single.create { single in
+            guard let url = URL(string: urlString) else {
+                single(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+                return Disposables.create()
+            }
+            
+            let task = URLSession.shared.dataTask(with: url) { data, response, error in
+                if let error = error {
+                    single(.failure(error))
+                    return
+                }
+                
+                guard let data = data else {
+                    single(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No data"])))
+                    return
+                }
+                
+                do {
+                    let decodedObject = try JSONDecoder().decode(T.self, from: data)
+                    single(.success(decodedObject))
+                } catch {
+                    single(.failure(error))
+                }
+            }
+            
+            task.resume()
+            
+            return Disposables.create {
+                task.cancel()
+            }
         }
-        let (data, response) = try await URLSession.shared.data(from: url)
-        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-            throw DataError.invalidResponse
-        }
-        return try JSONDecoder().decode(T.self, from: data)
     }
 }

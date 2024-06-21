@@ -6,31 +6,31 @@
 //
 
 import Foundation
-import Combine
+import RxSwift
+import RxCocoa
 
-class LoginViewModel: ObservableObject {
-    // Published properties to bind to the view
-    @Published var email: String = "" {
-        didSet {
-            validateForm()
-        }
-    }
-    @Published var password: String = "" {
-        didSet {
-            validateForm()
-        }
-    }
-    @Published var isSubmitButtonEnabled: Bool = false
+class LoginViewModel: NSObject {
+    // RxSwift subjects to bind to the view
+    let email = BehaviorRelay<String>(value: "")
+    let password = BehaviorRelay<String>(value: "")
+    let isSubmitButtonEnabled = BehaviorRelay<Bool>(value: false)
     
-    private var cancellables = Set<AnyCancellable>()
+    private let disposeBag = DisposeBag()
     
-    init() {
-        // Validate the form initially
-        validateForm()
+    override init() {
+        super.init()
+        setupBindings()
     }
     
-    private func validateForm() {
-        isSubmitButtonEnabled = isValidEmail(email) && isValidPassword(password)
+    private func setupBindings() {
+        // Combine email and password streams and validate form
+        Observable
+            .combineLatest(email, password)
+            .map { [weak self] email, password in
+                return self?.isValidEmail(email) == true && self?.isValidPassword(password) == true
+            }
+            .bind(to: isSubmitButtonEnabled)
+            .disposed(by: disposeBag)
     }
     
     func isValidEmail(_ email: String) -> Bool {

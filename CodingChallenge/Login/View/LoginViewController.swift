@@ -6,7 +6,8 @@
 //
 
 import UIKit
-import Combine
+import RxSwift
+import RxCocoa
 
 class LoginViewController: UIViewController {
     
@@ -18,33 +19,28 @@ class LoginViewController: UIViewController {
     @IBOutlet weak var passwordTextField: UITextField!
     @IBOutlet weak var emailTextField: UITextField!
     private var viewModel = LoginViewModel()
-    private var cancellables = Set<AnyCancellable>()
+    private let disposeBag = DisposeBag()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         bindViewModel()
         setupUI()
-        
     }
     
     private func bindViewModel() {
         // Bind email and password text fields to viewModel properties
-        emailTextField.addTarget(self, action: #selector(emailTextFieldChanged), for: .editingChanged)
-        passwordTextField.addTarget(self, action: #selector(passwordTextFieldChanged), for: .editingChanged)
+        emailTextField.rx.text.orEmpty
+            .bind(to: viewModel.email)
+            .disposed(by: disposeBag)
+        
+        passwordTextField.rx.text.orEmpty
+            .bind(to: viewModel.password)
+            .disposed(by: disposeBag)
         
         // Bind viewModel's isSubmitButtonEnabled to submitButton's isEnabled property
-        viewModel.$isSubmitButtonEnabled
-            .receive(on: RunLoop.main)
-            .assign(to: \.isEnabled, on: submitButton)
-            .store(in: &cancellables)
-    }
-    
-    @objc private func emailTextFieldChanged() {
-        viewModel.email = emailTextField.text ?? ""
-    }
-    
-    @objc private func passwordTextFieldChanged() {
-        viewModel.password = passwordTextField.text ?? ""
+        viewModel.isSubmitButtonEnabled
+            .bind(to: submitButton.rx.isEnabled)
+            .disposed(by: disposeBag)
     }
     
     private func setupUI() {

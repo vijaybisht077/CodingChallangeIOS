@@ -7,7 +7,6 @@
 
 import Foundation
 import XCTest
-import Combine
 import CoreData
 @testable import CodingChallenge
 
@@ -16,20 +15,17 @@ class PostsViewModelTests {
     var viewModel: PostsViewModel!
     var mockApiManager: MockPostsApiManager!
     var mockPersistentStorage: MockPersistentStorage!
-    var cancellables: Set<AnyCancellable>!
 
     func setUp() {
         mockApiManager = MockPostsApiManager()
         mockPersistentStorage = MockPersistentStorage()
         viewModel = PostsViewModel(manager: mockApiManager)
-        cancellables = Set<AnyCancellable>()
     }
 
     func tearDown() {
         viewModel = nil
         mockApiManager = nil
         mockPersistentStorage = nil
-        cancellables = nil
     }
 
     func testLoadPostsFromCoreData() {

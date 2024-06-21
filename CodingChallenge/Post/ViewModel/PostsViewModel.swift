@@ -6,25 +6,50 @@
 //
 
 import Foundation
-import Combine
+import RxSwift
+import RxCocoa
 import CoreData
 
 protocol PostsViewModelProtocol {
     var posts: [Post] { get set }
-    var postsPublisher: Published<[Post]>.Publisher { get }
+    var postsPublisher: Observable<[Post]> { get }
     var favoritePosts: [Post] { get set }
-    var favoritePostsPublisher: Published<[Post]>.Publisher { get }
+    var favoritePostsPublisher: Observable<[Post]> { get }
     func loadPosts()
     func loadFavorites()
     func isFavorite(post: Post) -> Bool
     func toggleFavorite(post: Post)
 }
 
-class PostsViewModel: ObservableObject, PostsViewModelProtocol {
-    @Published var posts: [Post] = []
-    @Published var favoritePosts: [Post] = []
-    var postsPublisher: Published<[Post]>.Publisher { $posts }
-    var favoritePostsPublisher: Published<[Post]>.Publisher { $favoritePosts }
+class PostsViewModel: PostsViewModelProtocol {
+    private let disposeBag = DisposeBag()
+    
+    private let _posts = BehaviorSubject<[Post]>(value: [])
+    var postsPublisher: Observable<[Post]> {
+        return _posts.asObservable()
+    }
+    var posts: [Post] {
+        get {
+            return (try? _posts.value()) ?? []
+        }
+        set {
+            _posts.onNext(newValue)
+        }
+    }
+    
+    private let _favoritePosts = BehaviorSubject<[Post]>(value: [])
+    var favoritePostsPublisher: Observable<[Post]> {
+        return _favoritePosts.asObservable()
+    }
+    var favoritePosts: [Post] {
+        get {
+            return (try? _favoritePosts.value()) ?? []
+        }
+        set {
+            _favoritePosts.onNext(newValue)
+        }
+    }
+    
     private let manager: ApiManagerProtocol
     private let persistentStorage: PersistentStorageProtocol
     
@@ -44,13 +69,14 @@ class PostsViewModel: ObservableObject, PostsViewModelProtocol {
         do {
             let result = try persistentStorage.context.fetch(fetchRequest)
             if !result.isEmpty {
-                // Convert CDPost to PostModel and append to posts
-                posts = result.map { cdPost in
+                // Convert CDPost to PostModel and set to posts
+                let postList = result.map { cdPost in
                     Post(userId: Int(cdPost.userId),
-                              id: Int(cdPost.id),
-                              title: cdPost.title ?? "",
-                              body: cdPost.body ?? "")
+                         id: Int(cdPost.id),
+                         title: cdPost.title ?? "",
+                         body: cdPost.body ?? "")
                 }
+                self.posts = postList
             } else {
                 fetchPostsFromNetwork()
             }
@@ -58,7 +84,7 @@ class PostsViewModel: ObservableObject, PostsViewModelProtocol {
             debugPrint("Failed to fetch posts from Core Data: \(error)")
         }
     }
-
+    
     private func savePosts() {
         let context = persistentStorage.context
         posts.forEach { postObject in
@@ -72,15 +98,18 @@ class PostsViewModel: ObservableObject, PostsViewModelProtocol {
     }
     
     func fetchPostsFromNetwork() {
-        Task { @MainActor in
-            do {
-                let posts: [Post] = try await manager.request(urlString: Constant.postUrl)
-                self.posts = posts
-                self.savePosts()
-            } catch {
-                print(error)
-            }
-        }
+        manager.request(urlString: Constant.postUrl)
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { [weak self] (posts: [Post]) in
+                    self?.posts = posts
+                    self?.savePosts()
+                },
+                onFailure: { error in
+                    print(error)
+                }
+            )
+            .disposed(by: disposeBag)
     }
     
     func loadFavorites() {
@@ -97,11 +126,13 @@ class PostsViewModel: ObservableObject, PostsViewModelProtocol {
     }
     
     func toggleFavorite(post: Post) {
-        if let index = favoritePosts.firstIndex(where: { $0.id == post.id }) {
-            favoritePosts.remove(at: index)
+        var currentFavorites = favoritePosts
+        if let index = currentFavorites.firstIndex(where: { $0.id == post.id }) {
+            currentFavorites.remove(at: index)
         } else {
-            favoritePosts.append(post)
+            currentFavorites.append(post)
         }
+        favoritePosts = currentFavorites
         saveFavorites()
     }
     

@@ -7,13 +7,14 @@
 
 import Foundation
 import UIKit
-import Combine
+import RxSwift
+import RxCocoa
 
 class CommentsViewController: UIViewController {
     @IBOutlet weak var tableView: UITableView!
     
     private var viewModel: CommentsViewModelProtocol
-    private var cancellables = Set<AnyCancellable>()
+    private let disposeBag = DisposeBag()
     var postId: Int = 0
     
     override func viewDidLoad() {
@@ -38,20 +39,20 @@ class CommentsViewController: UIViewController {
     
     private func bindViewModel() {
         viewModel.commentsPublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] _ in
                 self?.tableView.reloadData()
-            }
-            .store(in: &cancellables)
+            })
+            .disposed(by: disposeBag)
         
         viewModel.errorMessagePublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] errorMessage in
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] errorMessage in
                 if let errorMessage = errorMessage {
                     self?.showError(errorMessage)
                 }
-            }
-            .store(in: &cancellables)
+            })
+            .disposed(by: disposeBag)
     }
     
     private func showError(_ message: String) {
@@ -76,4 +77,3 @@ extension CommentsViewController: UITableViewDataSource {
         return cell
     }
 }
-

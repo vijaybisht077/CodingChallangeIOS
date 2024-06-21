@@ -7,30 +7,31 @@
 
 import Foundation
 import XCTest
-import Combine
+import RxSwift
+import RxCocoa
 @testable import CodingChallenge
 
 class LoginViewModelTests: XCTestCase {
     
     var viewModel: LoginViewModel!
-    var cancellables: Set<AnyCancellable>!
+    var disposeBag: DisposeBag!
     
     override func setUp() {
         super.setUp()
         viewModel = LoginViewModel()
-        cancellables = Set<AnyCancellable>()
+        disposeBag = DisposeBag()
     }
     
     override func tearDown() {
         viewModel = nil
-        cancellables = nil
+        disposeBag = nil
         super.tearDown()
     }
     
     func testInitialState() {
-        XCTAssertEqual(viewModel.email, "")
-        XCTAssertEqual(viewModel.password, "")
-        XCTAssertFalse(viewModel.isSubmitButtonEnabled)
+        XCTAssertEqual(viewModel.email.value, "")
+        XCTAssertEqual(viewModel.password.value, "")
+        XCTAssertFalse(viewModel.isSubmitButtonEnabled.value)
     }
     
     func testValidEmail() {
@@ -38,7 +39,7 @@ class LoginViewModelTests: XCTestCase {
         let validEmails = ["test@example.com", "user.name@domain.co", "user+name@domain.com"]
         for email in validEmails {
             // When
-            viewModel.email = email
+            viewModel.email.accept(email)
             // Then
             XCTAssertTrue(viewModel.isValidEmail(email))
         }
@@ -49,7 +50,7 @@ class LoginViewModelTests: XCTestCase {
         let invalidEmails = ["plainaddress", "@missingusername.com", "username@.com"]
         for email in invalidEmails {
             // When
-            viewModel.email = email
+            viewModel.email.accept(email)
             // Then
             XCTAssertFalse(viewModel.isValidEmail(email))
         }
@@ -60,7 +61,7 @@ class LoginViewModelTests: XCTestCase {
         let validPasswords = ["Password1", "12345678", "abcdefgh"]
         for password in validPasswords {
             // When
-            viewModel.password = password
+            viewModel.password.accept(password)
             // Then
             XCTAssertTrue(viewModel.isValidPassword(password))
         }
@@ -71,7 +72,7 @@ class LoginViewModelTests: XCTestCase {
         let invalidPasswords = ["short", "toolongpassword123", " "]
         for password in invalidPasswords {
             // When
-            viewModel.password = password
+            viewModel.password.accept(password)
             // Then
             XCTAssertFalse(viewModel.isValidPassword(password))
         }
@@ -79,27 +80,26 @@ class LoginViewModelTests: XCTestCase {
     
     func testFormValidation() {
         // When
-        viewModel.email = "test@example.com"
-        viewModel.password = "password"
+        viewModel.email.accept("test@example.com")
+        viewModel.password.accept("password")
         // Then
-        XCTAssertTrue(viewModel.isSubmitButtonEnabled)
+        XCTAssertTrue(viewModel.isSubmitButtonEnabled.value)
         
         // When
-        viewModel.email = "invalidemail"
+        viewModel.email.accept("invalidemail")
         // Then
-        XCTAssertFalse(viewModel.isSubmitButtonEnabled)
+        XCTAssertFalse(viewModel.isSubmitButtonEnabled.value)
         
         // When
-        viewModel.email = "test@example.com"
-        viewModel.password = "short"
+        viewModel.email.accept("test@example.com")
+        viewModel.password.accept("short")
         // Then
-        XCTAssertFalse(viewModel.isSubmitButtonEnabled)
+        XCTAssertFalse(viewModel.isSubmitButtonEnabled.value)
         
         // When
-        viewModel.email = "test@example.com"
-        viewModel.password = "validpassword"
+        viewModel.email.accept("test@example.com")
+        viewModel.password.accept("validpassword")
         // Then
-        XCTAssertTrue(viewModel.isSubmitButtonEnabled)
+        XCTAssertTrue(viewModel.isSubmitButtonEnabled.value)
     }
 }
-

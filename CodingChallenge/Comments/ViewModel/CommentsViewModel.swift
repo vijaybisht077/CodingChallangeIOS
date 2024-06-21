@@ -6,36 +6,65 @@
 //
 
 import Foundation
-import Combine
+import RxSwift
+import RxCocoa
 
 protocol CommentsViewModelProtocol {
     var comments: [Comment] { get set }
-    var commentsPublisher: Published<[Comment]>.Publisher { get }
+    var commentsPublisher: Observable<[Comment]> { get }
     var errorMessage: String? { get set }
-    var errorMessagePublisher: Published<String?>.Publisher { get }
+    var errorMessagePublisher: Observable<String?> { get }
     func fetchComments(for postId: Int)
 }
 
-class CommentsViewModel: ObservableObject, CommentsViewModelProtocol {
-    var commentsPublisher: Published<[Comment]>.Publisher { $comments }
-    var errorMessagePublisher: Published<String?>.Publisher { $errorMessage }
+class CommentsViewModel: CommentsViewModelProtocol {
+    var commentsPublisher: Observable<[Comment]> {
+        return _comments.asObservable()
+    }
+    var errorMessagePublisher: Observable<String?> {
+        return _errorMessage.asObservable()
+    }
     
-    @Published var comments: [Comment] = []
-    @Published var errorMessage: String?
-
+    private let _comments = BehaviorSubject<[Comment]>(value: [])
+    private let _errorMessage = BehaviorSubject<String?>(value: nil)
+    
+    var comments: [Comment] {
+        get {
+            return (try? _comments.value()) ?? []
+        }
+        set {
+            _comments.onNext(newValue)
+        }
+    }
+    
+    var errorMessage: String? {
+        get {
+            return (try? _errorMessage.value()) ?? nil
+        }
+        set {
+            _errorMessage.onNext(newValue)
+        }
+    }
+    
     private let manager: ApiManagerProtocol
+    private let disposeBag = DisposeBag()
+    
     init(manager: ApiManagerProtocol = ApiManager()) {
         self.manager = manager
     }
-
+    
     func fetchComments(for postId: Int) {
-        Task { @MainActor in
-            do {
-                let comments: [Comment] = try await manager.request(urlString: "https://jsonplaceholder.typicode.com/posts/\(postId)/comments")
-                self.comments = comments
-            } catch {
-                print(error)
-            }
-        }
+        manager.request(urlString: "https://jsonplaceholder.typicode.com/posts/\(postId)/comments")
+            .observe(on: MainScheduler.instance)
+            .subscribe(
+                onSuccess: { [weak self] (comments: [Comment]) in
+                    self?.comments = comments
+                },
+                onFailure: { [weak self] error in
+                    self?.errorMessage = error.localizedDescription
+                    print(error)
+                }
+            )
+            .disposed(by: disposeBag)
     }
 }
