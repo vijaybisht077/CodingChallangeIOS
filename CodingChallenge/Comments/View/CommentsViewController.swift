@@ -40,10 +40,7 @@ class CommentsViewController: UIViewController {
         viewModel.commentsPublisher
             .bind(to: tableView
                 .rx
-                .items(cellIdentifier: Constant.commentTableViewCell)) { (tableView, tableViewItem, cell) in
-                    guard let commentCell = cell as? CommentTableViewCell else {
-                        return
-                    }
+                .items(cellIdentifier: Constant.commentTableViewCell, cellType: CommentTableViewCell.self)) { (tableView, tableViewItem, commentCell) in
                     commentCell.configure(with: tableViewItem)
                 }
                 .disposed(by: disposeBag)

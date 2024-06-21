@@ -44,10 +44,7 @@ class FavoritesViewController: UIViewController {
         viewModel.favoritePostsPublisher
             .bind(to: tableView
                 .rx
-                .items(cellIdentifier: Constant.postCell)) { (tableView, tableViewItem, cell) in
-                    guard let postCell = cell as? PostTableViewCell else {
-                        return
-                    }
+                .items(cellIdentifier: Constant.postCell, cellType: PostTableViewCell.self)) { (tableView, tableViewItem, postCell) in
                     postCell.title.text = tableViewItem.title
                     postCell.bodyText.text = tableViewItem.body
                     postCell.bottomStackView.isHidden = true
