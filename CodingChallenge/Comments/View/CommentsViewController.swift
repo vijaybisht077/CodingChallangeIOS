@@ -19,7 +19,6 @@ class CommentsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        tableView.dataSource = self
         tableView.register(UINib(nibName: Constant.commentTableViewCell, bundle: nil),
                            forCellReuseIdentifier: Constant.commentTableViewCell)
         
@@ -39,11 +38,15 @@ class CommentsViewController: UIViewController {
     
     private func bindViewModel() {
         viewModel.commentsPublisher
-            .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] _ in
-                self?.tableView.reloadData()
-            })
-            .disposed(by: disposeBag)
+            .bind(to: tableView
+                .rx
+                .items(cellIdentifier: Constant.commentTableViewCell)) { (tableView, tableViewItem, cell) in
+                    guard let commentCell = cell as? CommentTableViewCell else {
+                        return
+                    }
+                    commentCell.configure(with: tableViewItem)
+                }
+                .disposed(by: disposeBag)
         
         viewModel.errorMessagePublisher
             .observe(on: MainScheduler.instance)
@@ -53,27 +56,12 @@ class CommentsViewController: UIViewController {
                 }
             })
             .disposed(by: disposeBag)
+        
     }
     
     private func showError(_ message: String) {
         let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         present(alert, animated: true)
-    }
-}
-    
-extension CommentsViewController: UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.comments.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: Constant.commentTableViewCell,
-                                                       for: indexPath) as? CommentTableViewCell else {
-            return UITableViewCell()
-        }
-        let comment = viewModel.comments[indexPath.row]
-        cell.configure(with: comment)
-        return cell
     }
 }

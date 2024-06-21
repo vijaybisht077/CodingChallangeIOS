@@ -15,6 +15,7 @@ protocol PostsViewModelProtocol {
     var postsPublisher: Observable<[Post]> { get }
     var favoritePosts: [Post] { get set }
     var favoritePostsPublisher: Observable<[Post]> { get }
+    var favoriteToggledPublisher: Observable<Post> { get }
     func loadPosts()
     func loadFavorites()
     func isFavorite(post: Post) -> Bool
@@ -24,30 +25,35 @@ protocol PostsViewModelProtocol {
 class PostsViewModel: PostsViewModelProtocol {
     private let disposeBag = DisposeBag()
     
-    private let _posts = BehaviorSubject<[Post]>(value: [])
+    private let _posts = BehaviorRelay<[Post]>(value: [])
     var postsPublisher: Observable<[Post]> {
         return _posts.asObservable()
     }
     var posts: [Post] {
         get {
-            return (try? _posts.value()) ?? []
+            return _posts.value
         }
         set {
-            _posts.onNext(newValue)
+            _posts.accept(newValue)
         }
     }
     
-    private let _favoritePosts = BehaviorSubject<[Post]>(value: [])
+    private let _favoritePosts = BehaviorRelay<[Post]>(value: [])
     var favoritePostsPublisher: Observable<[Post]> {
         return _favoritePosts.asObservable()
     }
     var favoritePosts: [Post] {
         get {
-            return (try? _favoritePosts.value()) ?? []
+            return _favoritePosts.value
         }
         set {
-            _favoritePosts.onNext(newValue)
+            _favoritePosts.accept(newValue)
         }
+    }
+    
+    private let _favoriteToggled = PublishSubject<Post>()
+    var favoriteToggledPublisher: Observable<Post> {
+        return _favoriteToggled.asObservable()
     }
     
     private let manager: ApiManagerProtocol
@@ -134,6 +140,7 @@ class PostsViewModel: PostsViewModelProtocol {
         }
         favoritePosts = currentFavorites
         saveFavorites()
+        _favoriteToggled.onNext(post)  // Notify about the favorite toggle
     }
     
     func isFavorite(post: Post) -> Bool {

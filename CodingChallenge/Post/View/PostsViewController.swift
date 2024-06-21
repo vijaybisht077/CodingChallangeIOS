@@ -32,45 +32,40 @@ class PostsViewController: UIViewController {
     }
     
     private func setupTableView() {
-        tableView.delegate = self
-        tableView.dataSource = self
         let nib = UINib(nibName: Constant.postTableViewCell, bundle: nil)
         tableView.register(nib, forCellReuseIdentifier: Constant.postCell)
     }
     
     private func bindViewModel() {
         viewModel.postsPublisher
-            .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] _ in
-                self?.tableView.reloadData()
+            .bind(to: tableView
+                .rx
+                .items(cellIdentifier: Constant.postCell)) { (tableView, tableViewItem, cell) in
+                    guard let postCell = cell as? PostTableViewCell else {
+                        return
+                    }
+                    postCell.title.text = tableViewItem.title
+                    postCell.bodyText.text = tableViewItem.body
+                    postCell.isFavorite = self.viewModel.isFavorite(post: tableViewItem)
+                    postCell.favoriteAction = { [weak self] in
+                        self?.viewModel.toggleFavorite(post: tableViewItem)
+                    }
+                    postCell.commentAction = { [weak self] in
+                        let nextViewController = CommentsViewController(viewModel: CommentsViewModel())
+                        nextViewController.postId = tableViewItem.id
+                        self?.navigationController?.pushViewController(nextViewController, animated: true)
+                    }
+                }
+                .disposed(by: disposeBag)
+        
+        // Observe the favoriteToggled and reload the corresponding row
+        viewModel.favoriteToggledPublisher
+            .subscribe(onNext: { [weak self] toggledPost in
+                if let index = self?.viewModel.posts.firstIndex(where: { $0.id == toggledPost.id }) {
+                    let indexPath = IndexPath(row: index, section: 0)
+                    self?.tableView.reloadRows(at: [indexPath], with: .automatic)
+                }
             })
             .disposed(by: disposeBag)
-    }
-}
-
-extension PostsViewController: UITableViewDelegate, UITableViewDataSource {
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return viewModel.posts.count
-    }
-    
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: Constant.postCell,
-                                                       for: indexPath) as? PostTableViewCell else {
-            return UITableViewCell()
-        }
-        let post = viewModel.posts[indexPath.row]
-        cell.title.text = post.title
-        cell.bodyText.text = post.body
-        cell.isFavorite = viewModel.isFavorite(post: post)
-        cell.favoriteAction = { [weak self] in
-            self?.viewModel.toggleFavorite(post: post)
-            self?.tableView.reloadRows(at: [indexPath], with: .automatic)
-        }
-        cell.commentAction = { [weak self] in
-            let nextViewController = CommentsViewController(viewModel: CommentsViewModel())
-            nextViewController.postId = post.id
-            self?.navigationController?.pushViewController(nextViewController, animated: true)
-        }
-        return cell
     }
 }
